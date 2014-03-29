@@ -1,0 +1,109 @@
+/************************************************************************-
+EVA Board:
+    EVA300-3
+
+Input PIN:
+    ADIO_6       for UART communication
+
+Output PIN:
+    ADIO_7       for UART communication
+    SCSEDIO_0   indicates that an Air telegram was received
+
+Description:
+    This example demonstrates a serial gateway. All the radio telegrams that are received
+    from the AIR are sent to the UART and vice versa, all serial telegrams that are 
+    received from the UART are send to the AIR.
+    
+Notes:
+    The return values of the radio_sendTelegram are not checked!
+
+    The incoming radio telegram parameters pTelIn are not transmitted through the UART!
+-************************************************************************/
+
+#include "EO3000I_API.h"
+#include "EO3000I_CFG.h"
+
+
+code uint8 VERSION_APP[] = {0xE0,'V','E','R','S','I','O','N',1,0,4,0,'A','R','A','D','I','O','T','O','S','E','R','I','A','L',0x00,0xE0};
+
+void radio2serial()
+{
+	
+   struct myRadioType{ 
+    CHOICE_TYPE u8Choice; 
+    uint8  Data; 
+    uint32 u32Id; 
+    uint8  u8Status; 
+    uint8  u8Chk; 
+    uint8  u8Fill[RADIO_BUFF_LENGTH-8];     // align u8Length as last byte in structure !!!
+    RADIO_TEL_LENGTH u8Length; 
+  }myRT;
+
+	// Telegram types
+//	TEL_RADIO_TYPE	rTelIn;
+	  TEL_SERIAL_TYPE	sTelOut;
+    TEL_PARAM_TYPE  pTelIn;
+
+	if (radio_getTelegram((TEL_RADIO_TYPE *)&myRT, &pTelIn) == OK)
+	{
+         if(myRT.Data==16)
+		 {
+		 	   io_togDigital(SCSEDIO_0);				 		
+			   if (misc_radioToSerial(&myRT,&sTelOut) == OK)
+			   while (uart_sendTelegram(&sTelOut) != OK) ;
+		 }
+		 if(myRT.Data==48)
+		 {
+		 	   io_togDigital(SCLKDIO_1);				 		
+			   if (misc_radioToSerial(&myRT,&sTelOut) == OK)
+			   while (uart_sendTelegram(&sTelOut) != OK) ;
+		 }		
+	}
+}
+
+void serial2radio()
+{
+	// Telegram types
+	TEL_RADIO_TYPE  rTelOut;
+	TEL_SERIAL_TYPE	sTelIn;
+    TEL_PARAM_TYPE  pTelOut;
+
+  	// Parameter initialization of outgoing telegrams
+    // We send 3 subtelegrams
+	pTelOut.p_tx.u8SubTelNum = 3;
+    // Send the telegram as broadcast - don't use ADT encapsulation
+	pTelOut.p_tx.u32DestinationId = 0;
+
+	if (uart_getTelegram(&sTelIn) == OK)
+	{
+	    if (misc_serialToRadio(&sTelIn,&rTelOut) == OK)
+		{
+			//Since API version 2.2.0.0 there is always 1 radio buffer free for sending so no deadlock can happen if all radio Rx buffers are full
+			while (radio_sendTelegram(&rTelOut, &pTelOut)==BUFF_FULL); 
+		}
+	}
+}
+
+void main()
+{		
+	mainInit();
+	radio_enableRx(1);
+
+    filter_delAll();
+	//filter_allowChoice(RADIO_CHOICE_RPS);
+	filter_allowId(2055064);
+	//filter_dropId(2055068);
+	filter_enable(TRUE);
+
+	while (1)
+	{
+		CLR_WDT();		
+        // Handle radio to uart traffic
+		radio2serial();
+        // Handle uart to radio traffic    
+		serial2radio(); 
+	//	io_togDigital(RSDADIO_3);                                    
+	//	time_wait(500);                                                  
+	}
+}
+

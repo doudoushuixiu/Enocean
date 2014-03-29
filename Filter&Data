@@ -1,23 +1,11 @@
 /************************************************************************-
 EVA Board:
     EVA300-3
-
 Input PIN:
     ADIO_6       for UART communication
-
 Output PIN:
     ADIO_7       for UART communication
     SCSEDIO_0   indicates that an Air telegram was received
-
-Description:
-    This example demonstrates a serial gateway. All the radio telegrams that are received
-    from the AIR are sent to the UART and vice versa, all serial telegrams that are 
-    received from the UART are send to the AIR.
-    
-Notes:
-    The return values of the radio_sendTelegram are not checked!
-
-    The incoming radio telegram parameters pTelIn are not transmitted through the UART!
 -************************************************************************/
 
 #include "EO3000I_API.h"

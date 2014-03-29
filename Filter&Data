@@ -28,9 +28,9 @@ void radio2serial()
   }myRT;
 
 	// Telegram types
-//	TEL_RADIO_TYPE	rTelIn;
+       // TEL_RADIO_TYPE	rTelIn;
 	  TEL_SERIAL_TYPE	sTelOut;
-    TEL_PARAM_TYPE  pTelIn;
+          TEL_PARAM_TYPE        pTelIn;
 
 	if (radio_getTelegram((TEL_RADIO_TYPE *)&myRT, &pTelIn) == OK)
 	{
@@ -54,7 +54,7 @@ void serial2radio()
 	// Telegram types
 	TEL_RADIO_TYPE  rTelOut;
 	TEL_SERIAL_TYPE	sTelIn;
-    TEL_PARAM_TYPE  pTelOut;
+        TEL_PARAM_TYPE  pTelOut;
 
   	// Parameter initialization of outgoing telegrams
     // We send 3 subtelegrams
@@ -77,10 +77,12 @@ void main()
 	mainInit();
 	radio_enableRx(1);
 
-    filter_delAll();
+        filter_delAll();
 	//filter_allowChoice(RADIO_CHOICE_RPS);
+	
 	filter_allowId(2055064);
 	//filter_dropId(2055068);
+	
 	filter_enable(TRUE);
 
 	while (1)

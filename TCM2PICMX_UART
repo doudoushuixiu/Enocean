@@ -1,0 +1,113 @@
+#include <plib.h>					// Peripheral Library
+
+
+// Configuration Bit settings
+// SYSCLK = 80 MHz (8MHz Crystal/ FPLLIDIV * FPLLMUL / FPLLODIV)
+// PBCLK = 40 MHz
+// Primary Osc w/PLL (XT+,HS+,EC+PLL)
+// WDT OFF
+// Other options are don't care
+//
+#pragma config FPLLMUL = MUL_20, FPLLIDIV = DIV_2, FPLLODIV = DIV_1, FWDTEN = OFF
+#pragma config POSCMOD = HS, FNOSC = PRIPLL, FPBDIV = DIV_1
+
+#define SYS_FREQ 				(80000000L)
+#define DESIRED_BAUDRATE    	(9600)      //The desired BaudRate
+
+//UART4发送单字节字符函数
+void PutCharacter(const char character)
+{
+  while (!UARTTransmitterIsReady(UART1))
+    ;
+  	UARTSendDataByte(UART1, character);
+  while (!UARTTransmissionHasCompleted(UART1))
+    ;
+}
+
+//UART4数据流发送函数.string -- 需要发送的字符串
+void WriteString(const char *string)
+{
+  while (*string != '\0')
+    {
+      while (!UARTTransmitterIsReady(UART1))
+        ;
+      UARTSendDataByte(UART1, *string);
+      string++;
+      while (!UARTTransmissionHasCompleted(UART1))
+        ;
+    }
+}
+
+int main(void)
+{
+	int	pbClk;
+
+	// Configure the device for maximum performance but do not change the PBDIV
+	// Given the options, this function will change the flash wait states, RAM
+	// wait state and enable prefetch cache but will not change the PBDIV.
+	// The PBDIV value is already set via the pragma FPBDIV option above..
+	pbClk=SYSTEMConfig(SYS_FREQ, SYS_CFG_WAIT_STATES | SYS_CFG_PCACHE);
+
+	mPORTBClearBits(BIT_8); 		// Turn off RA7 on startup.
+	mPORTBSetPinsDigitalOut(BIT_8);	// Make RA7 as output.
+
+
+	// Explorer-16 uses UART2 to connect to the PC.
+	// This initialization assumes 36MHz Fpb clock. If it changes,
+	// you will have to modify baud rate initializer.
+	      OpenUART1(UART_EN, 		// Module is ON
+			  UART_RX_ENABLE | UART_TX_ENABLE,		// Enable TX & RX
+			  pbClk/16/DESIRED_BAUDRATE-1);	// 9600 bps, 8-N-1
+
+  //配置UART4
+	UARTConfigure(UART4, UART_ENABLE_PINS_TX_RX_ONLY);
+	UARTSetFifoMode(UART4,UART_INTERRUPT_ON_TX_NOT_FULL | UART_INTERRUPT_ON_RX_NOT_EMPTY);
+	UARTSetLineControl(UART4, UART_DATA_SIZE_8_BITS | UART_PARITY_NONE | UART_STOP_BITS_1);
+	UARTSetDataRate(UART4, SYS_FREQ, DESIRED_BAUDRATE); 
+	UARTEnable(UART4, UART_ENABLE_FLAGS(UART_PERIPHERAL | UART_RX | UART_TX));
+
+	INTEnable(INT_SOURCE_UART_RX(UART4), INT_ENABLED);
+	INTSetVectorPriority(INT_VECTOR_UART(UART4), INT_PRIORITY_LEVEL_2);
+	INTSetVectorSubPriority(INT_VECTOR_UART(UART4), INT_SUB_PRIORITY_LEVEL_0);
+	// configure for multi-vectored mode
+	INTConfigureSystem(INT_SYSTEM_CONFIG_MULT_VECTOR);
+	// enable interrupts
+	INTEnableInterrupts();
+
+	// Configure UART2 RX Interrupt
+	ConfigIntUART1(UART_INT_PR3 | UART_RX_INT_EN);
+
+	// Must enable glocal interrupts - in this case, we are using multi-vector mode
+   INTEnableSystemMultiVectoredInt();
+
+   putsUART1("*** UART Interrupt-driven Application Example ***\r\n");
+   putsUART1("*** Type some characters and observe echo and RA7 LED toggle ***\r\n");
+
+	// Let interrupt handler do the work
+	while (1);
+
+	return 0;
+}
+
+void __ISR(49, ipl2) _UART4_TX_handle(void)
+{
+	unsigned char Receivedata;
+	// Is this an RX interrupt?
+	if (INTGetFlag(INT_SOURCE_UART_RX(UART4)))
+	  {
+		// 发送接受到的数据，用于验证通信是否正确
+		PutCharacter(UARTGetDataByte(UART4));
+		// 清除接收中断标志
+		INTClearFlag(INT_SOURCE_UART_RX(UART4));
+		// 点亮接收数据指示灯，用以表示接收数据成功
+         mPORTBToggleBits(BIT_8);		
+	  }
+	//发送中断无处理
+  	if ( INTGetFlag(INT_SOURCE_UART_TX(UART4)) )
+    {
+      INTClearFlag(INT_SOURCE_UART_TX(UART4));
+    }
+
+	
+}
+

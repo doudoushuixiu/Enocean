@@ -1,0 +1,315 @@
+/*设置FILTER的最大数量为11，单个添加开关，添加后需重启才有效*/
+#include "EO3000I_API.h"
+#include "EO3000I_CFG.h"
+
+#define  RM_CODE_ADDR1 0x7E00
+#define  RM_CODE_ADDR2 0x7D00
+#define  ID_NUM_ADDR   0x7C00
+
+#define TURE  1
+#define FALSE 0
+
+uint32 ID_ADDR[10]={0x7B00,0x7A00,0x7900,0x7800,0x7700,0x7600,0x7500,0x7400,0x7300,0x7200};
+
+code uint8 VERSION_APP[] = {0xE0,'V','E','R','S','I','O','N',1,0,4,0,'A','R','A','D','I','O','T','O','S','E','R','I','A','L',0x00,0xE0};
+
+uint8   status=0;
+uint8   id_adress_num=0;
+uint8   light1;
+uint8   light2;
+
+uint8   match_flag=1;
+uint8   learn_mode=0;
+uint32  allow_id[10]=0;
+uint32  get_flash_id[10]=0;
+
+typedef struct
+{
+	// Public 
+	uint8		u8Pin;			// e.g. ADIO0
+	uint8		u8ActiveState;	// button is pressed if (io_getDigital(u8Button)==bActiveState)
+	uint16		u16TimeOutON;	// time [ms] the button has to be pressed to be recognized as pressed
+	uint16		u16TimeOutOFF;	// time [ms] the button has to be pressed to be recognized as released	
+	// Private
+	TIMER_TYPE	tTimer;
+ 	uint8		u8State;
+} BTN_STRUCT;
+
+typedef enum 
+{
+	BTN_IDLE = 0,
+	BTN_EDGE1,
+	BTN_TRIGGERED,
+	BTN_PRESSED,	//< most important
+	BTN_PRESS_HOLD,
+	BTN_EDGE2,
+	BTN_RELEASE_HOLD,
+	BTN_RELEASED	
+} BTN_STATE;
+
+BTN_STATE btn_getState(BTN_STRUCT *pBtn)
+{
+	code uint8 transition_table[8][4]={	0,	1,	0,	1,
+										5,	2,	5,	1,
+										5,	2,	5,	3,
+										5,	4,	5,	4,
+										5,	4,	5,	4,
+										6,	1,	0,	1,
+										6,	1,	7,	1,
+										0,	1,	0,	1 };	
+	register uint8 u8Input;	
+	// Get button state
+	io_getDigital(pBtn->u8Pin, &u8Input);
+	u8Input = (u8Input == pBtn->u8ActiveState)?1:0;	
+	// Get timeout state
+	u8Input |= ((time_getTimeOut(&(pBtn->tTimer))==TIME_OUT)?2:0);
+	// Get new state
+	pBtn->u8State = transition_table[pBtn->u8State][u8Input]; // we want only the state, not action
+	// Perform action 
+	switch (pBtn->u8State)
+	{
+		case 1:
+			time_setTimerCount(&(pBtn->tTimer), pBtn->u16TimeOutON);
+			break;
+		case 5:
+			time_setTimerCount(&(pBtn->tTimer), pBtn->u16TimeOutOFF);
+			break;
+	}
+	return pBtn->u8State;	
+}
+
+BTN_STATE btn_getState(BTN_STRUCT *pBtn);
+
+// Define buttons 
+BTN_STRUCT btnLearn = {	ADIO_3,		// Pin
+						0,			// Active state
+						10,		    // Time the button has to be in 'Active state' to be recognized as pressed
+						100 };	
+
+void flash_light()
+{
+	io_togDigital(RSDADIO_3);
+	time_wait(100);
+	io_togDigital(RSDADIO_3);
+	time_wait(100);
+	io_togDigital(RSDADIO_3);				 
+	time_wait(100);
+	io_togDigital(RSDADIO_3);	
+}
+
+uint8 find_id_flash(uint32 id)
+{
+	 uint8 i;
+	 for(i=0;i<10;i++)
+	 {
+	 	 if(id==get_flash_id[i])
+		 {
+		 	return TURE;			
+		 }
+	 }
+	 return FALSE;
+}
+
+/* Init the Filter,Allow the ID which TCM300 should accept */
+void filter_set()
+{
+	uint8 i=0;	
+	// Reset all filters
+	filter_delAll();
+	for(i=0;i<10;i++)
+	{
+		mem_readFlash(&get_flash_id[i],ID_ADDR[i], sizeof(get_flash_id[i]));
+		if(get_flash_id[i]!=0)
+		{
+			filter_allowId(get_flash_id[i]);
+		}
+	}
+	mem_readFlash(&id_adress_num, ID_NUM_ADDR, sizeof(id_adress_num));		
+	// Enable filtering
+    filter_enable(TRUE);
+}
+
+/*after entering into learn mode，get ID,write it into FLASH*/
+void filter_control()
+{
+	 if(learn_mode==1)
+     {
+			struct myRadioType{ 
+	    		CHOICE_TYPE u8Choice; 
+	    		uint8  Data; 
+	    		uint32 u32Id; 
+	    		uint8  u8Status; 
+	    		uint8  u8Chk; 
+	   	 		uint8  u8Fill[RADIO_BUFF_LENGTH-8];     // align u8Length as last byte in structure !!!
+	    		RADIO_TEL_LENGTH u8Length; 
+       		}learn_RT;
+		 TEL_PARAM_TYPE  pTelIn;
+
+		 if (radio_getTelegram((TEL_RADIO_TYPE *)&learn_RT, &pTelIn) == OK)
+			{
+				allow_id[id_adress_num]=learn_RT.u32Id;	
+				
+				if(find_id_flash(allow_id[id_adress_num])==FALSE)
+				{
+					filter_allowId(allow_id[id_adress_num]);
+
+					mem_writeFlash(&allow_id[id_adress_num], ID_ADDR[id_adress_num], sizeof(allow_id[id_adress_num]));
+	             
+					id_adress_num++;
+					if(id_adress_num==10)
+					{
+						id_adress_num=0;
+					}
+					mem_writeFlash(&id_adress_num, ID_NUM_ADDR, sizeof(id_adress_num));											
+				    flash_light();
+				}
+						 
+			}	 
+	 }	 
+}
+
+/*If the learn button is pushed,TCM300 will turn into learn mode , push the toggle(PTM) then TCM300 will remember it's ID*/
+void learn_match_id()
+{
+	if (btn_getState(&btnLearn)==BTN_PRESSED)
+		{						
+			if(match_flag==0)
+			{
+				filter_enable(TRUE);
+				io_setDigital(WSDADIO_2,0);
+				learn_mode=0;			
+			}       
+			if(match_flag==1)
+			{
+				filter_enable(FALSE);
+				io_setDigital(WSDADIO_2,1);
+				learn_mode=1;					            											
+			}						
+			match_flag=!match_flag;
+		}                        
+}
+
+
+/*After turn on the TCM300,it will turn on/off the light.which is determined by reading rhe Flash */
+void light_reset()
+{
+	 uint8   setlight1;
+	 uint8   setlight2;
+    //set light1
+	 mem_readFlash(&setlight1, RM_CODE_ADDR1, sizeof(setlight1));
+	 if(setlight1==0x00)
+	 {
+	 	io_setDigital(SCSEDIO_0, 0);
+	 }
+	 if(setlight1==0x12)
+	 {
+	 	io_setDigital(SCSEDIO_0, 1);	
+	 }
+	//set light2
+	 mem_readFlash(&setlight2, RM_CODE_ADDR2, sizeof(setlight2));
+	 if(setlight2==0x00)
+	 {
+	 	io_setDigital(SCLKDIO_1, 0);
+	 }
+	 if(setlight2==0x12)
+	 {
+	 	io_setDigital(SCLKDIO_1, 1);	
+	 }
+}
+
+
+void radio2serial()
+{	
+    uint8   on=0x12;
+    uint8   off=0x00;
+	if(learn_mode==0)
+	{
+	   struct myRadioType{ 
+	    CHOICE_TYPE u8Choice; 
+	    uint8  Data; 
+	    uint32 u32Id; 
+	    uint8  u8Status; 
+	    uint8  u8Chk; 
+	    uint8  u8Fill[RADIO_BUFF_LENGTH-8];     // align u8Length as last byte in structure !!!
+	    RADIO_TEL_LENGTH u8Length; 
+	  }myRT;
+		// Telegram types
+	//	TEL_RADIO_TYPE	rTelIn;
+		TEL_SERIAL_TYPE	sTelOut;
+    	TEL_PARAM_TYPE  pTelIn;
+
+		if (radio_getTelegram((TEL_RADIO_TYPE *)&myRT, &pTelIn) == OK)
+		{ 
+	         if(myRT.Data==16)
+			 {
+			 	   io_togDigital(SCSEDIO_0);
+				   io_getDigital(SCSEDIO_0,&light1);		
+				   if(light1==1)
+				   {
+				       mem_writeFlash(&on, RM_CODE_ADDR1, sizeof(on));
+				   }
+				   if(light1==0)
+				   {
+					   mem_writeFlash(&off, RM_CODE_ADDR1, sizeof(off));	 
+				   }			 		
+				   if (misc_radioToSerial(&myRT,&sTelOut) == OK)
+				   while (uart_sendTelegram(&sTelOut) != OK) ;
+			 }
+			 if(myRT.Data==48)
+			 {
+			 	   io_togDigital(SCLKDIO_1);			   		   
+				   io_getDigital(SCLKDIO_1,&light2);		
+				   if(light2==1)
+				   {
+				       mem_writeFlash(&on, RM_CODE_ADDR2, sizeof(on));
+					}
+				   if(light2==0)
+				   {
+					   mem_writeFlash(&off, RM_CODE_ADDR2, sizeof(off));	 
+				   }			   				 		
+				   if (misc_radioToSerial(&myRT,&sTelOut) == OK)
+				   while (uart_sendTelegram(&sTelOut) != OK) ;
+			 }		
+		}
+	}
+}
+
+void serial2radio()
+{
+	// Telegram types
+	TEL_RADIO_TYPE  rTelOut;
+	TEL_SERIAL_TYPE	sTelIn;
+    TEL_PARAM_TYPE  pTelOut;
+  	// Parameter initialization of outgoing telegrams
+    // We send 3 subtelegrams
+	pTelOut.p_tx.u8SubTelNum = 3;
+    // Send the telegram as broadcast - don't use ADT encapsulation
+	pTelOut.p_tx.u32DestinationId = 0;
+	if (uart_getTelegram(&sTelIn) == OK)
+	{
+	    if (misc_serialToRadio(&sTelIn,&rTelOut) == OK)
+		{
+			//Since API version 2.2.0.0 there is always 1 radio buffer free for sending so no deadlock can happen if all radio Rx buffers are full
+			while (radio_sendTelegram(&rTelOut, &pTelOut)==BUFF_FULL); 
+		}
+	}
+}
+
+void main()
+{		
+	mainInit();
+	radio_enableRx(1);
+	light_reset();
+	filter_set();
+	while (1)
+	{	     
+		CLR_WDT();								
+		learn_match_id();
+		filter_control();
+        // Handle radio to uart traffic
+		radio2serial();
+        // Handle uart to radio traffic    
+		serial2radio();			
+				                          
+	}
+}

@@ -1,0 +1,10 @@
+".\Output\main.obj",
+".\Output\STARTUP.obj",
+"..\..\EO3000I_LIB\EO3000I_API.LIB",
+".\Output\EO3000I_CFG.obj",
+".\Output\tcm300-315mhz-default.obj" 
+TO ".\Output\RadioToSerial_315" 
+PRINT(".\Output\RadioToSerial_315.m51") RAMSIZE(256) 
+DISABLEWARNING (15,16) 
+CODE( 0X0000-0X7FFF )
+XDATA( 0X0000-0X07FF )

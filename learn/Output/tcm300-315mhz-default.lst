@@ -1,0 +1,235 @@
+A51 MACRO ASSEMBLER  TCM300_315MHZ_DEFAULT                                                03/22/2014 14:19:05 PAGE     1
+
+
+MACRO ASSEMBLER A51 V8.01
+OBJECT MODULE PLACED IN .\Output\tcm300-315mhz-default.obj
+ASSEMBLER INVOKED BY: C:\Keil\C51\BIN\A51.EXE ..\..\EO3000I_LIB\RadioCFG\tcm300-315mhz-default.a51 SET(LARGE) DEBUG PRIN
+                      T(.\Output\tcm300-315mhz-default.lst) OBJECT(.\Output\tcm300-315mhz-default.obj) EP
+
+LOC  OBJ            LINE     SOURCE
+
+                       1     
+                       2     ;ES1.3 315 Id: int_setup_default_RXTX_315mhz.txt,v 1.39 2012/01/30 16:18:53 attila.strba Ex
+                             p 
+                       3     
+                       4     PUBLIC _radio_init_asm
+                       5     PUBLIC u8RssiCalib
+                       6     
+                       7     ?CO?radio_init SEGMENT CODE
+----                   8             RSEG ?CO?radio_init
+                       9     
+0000 E0524144         10     TABLE:  DB   0xE0,'R','A','D','I','O',3,1,39,1,3,0,0,0xE0
+0004 494F0301                
+0008 27010300                
+000C 00E0                    
+                      11     
+                      12     ?PR?_radio_init_asm?RADIO_INIT_ASM SEGMENT CODE 
+----                  13         RSEG ?PR?_radio_init_asm?RADIO_INIT_ASM
+                      14     
+0000                  15     u8RssiCalib:
+0000 5F               16         DB  05FH
+0001 5F               17         DB  05FH
+0002 5F               18         DB  05FH
+0003 5F               19         DB  05FH
+0004 5F               20         DB  05FH
+0005 5F               21         DB  05FH
+0006 5F               22         DB  05FH
+0007 5C               23         DB  05CH
+0008 55               24         DB  055H
+0009 4F               25         DB  04FH
+000A 48               26         DB  048H
+000B 42               27         DB  042H
+000C 3C               28         DB  03CH
+000D 35               29         DB  035H
+000E 2F               30         DB  02FH
+000F 2D               31         DB  02DH
+                      32     
+0010                  33     _radio_init_asm:
+                      34     
+0010 EF               35     MOV A, R7
+0011 B40203           36     CJNE A,#0x02, RADIO_INIT
+0014 020000   F       37     LJMP SEND_ANALOG0_CHAIN
+                      38     
+0017                  39     RADIO_INIT:
+0017 7003             40     JNZ  RADIO_INIT_CHAINS
+                      41     
+0019                  42     ONLY_SEND_JLCC:
+0019 020000   F       43     LJMP SEND_JLCC_CHAIN
+                      44     
+001C                  45     RADIO_INIT_CHAINS:
+                      46     ;SFRR 0x00CE, 0x00000034
+001C 75CE34           47     MOV 0xCE, #0x34
+                      48     ;SFRR 0x00D7, 0x00000005
+001F 75D705           49     MOV 0xD7, #0x05
+                      50     ;SFRR 0x00BC, 0x00000080
+0022 75BC80           51     MOV 0xBC, #0x80
+                      52     ;APBR 0x0B00, 0x00000000
+0025 75C000           53     MOV 0xC0, #0x00
+A51 MACRO ASSEMBLER  TCM300_315MHZ_DEFAULT                                                03/22/2014 14:19:05 PAGE     2
+
+0028 75C10B           54     MOV 0xC1, #0x0B
+002B 75D800           55     MOV 0xD8, #0x00
+002E 75D900           56     MOV 0xD9, #0x00
+0031 75DA00           57     MOV 0xDA, #0x00
+0034 75DB00           58     MOV 0xDB, #0x00
+0037 75C201           59     MOV 0xC2, #0x01
+                      60     ;APBR 0x0E00, 0x00000000
+003A 75C10E           61     MOV 0xC1, #0x0E
+003D 75C201           62     MOV 0xC2, #0x01
+                      63     ;APBR 0x0F00, 0x00000000
+0040 75C10F           64     MOV 0xC1, #0x0F
+0043 75C201           65     MOV 0xC2, #0x01
+                      66     ;APBR 0x1100, 0x00000000
+0046 75C111           67     MOV 0xC1, #0x11
+0049 75C201           68     MOV 0xC2, #0x01
+                      69     ;APBR 0x0A00, 0x00000001
+004C 75C10A           70     MOV 0xC1, #0x0A
+004F 75D801           71     MOV 0xD8, #0x01
+0052 75C201           72     MOV 0xC2, #0x01
+                      73     ;APBR 0x0900, 0x00000021
+0055 75C109           74     MOV 0xC1, #0x09
+0058 75D821           75     MOV 0xD8, #0x21
+005B 75C201           76     MOV 0xC2, #0x01
+                      77     ;APBR 0x0D00, 0x00000038
+005E 75C10D           78     MOV 0xC1, #0x0D
+0061 75D838           79     MOV 0xD8, #0x38
+0064 75C201           80     MOV 0xC2, #0x01
+                      81     ;APBR 0x0C00, 0x00000038
+0067 75C10C           82     MOV 0xC1, #0x0C
+006A 75C201           83     MOV 0xC2, #0x01
+                      84     ;APBR 0x0908, 0x013C3C4B
+006D 75C008           85     MOV 0xC0, #0x08
+0070 75C109           86     MOV 0xC1, #0x09
+0073 75D84B           87     MOV 0xD8, #0x4B
+0076 75D93C           88     MOV 0xD9, #0x3C
+0079 75DA3C           89     MOV 0xDA, #0x3C
+007C 75DB01           90     MOV 0xDB, #0x01
+007F 75C201           91     MOV 0xC2, #0x01
+                      92     ;APBR 0x0904, 0x9008F078
+0082 75C004           93     MOV 0xC0, #0x04
+0085 75D878           94     MOV 0xD8, #0x78
+0088 75D9F0           95     MOV 0xD9, #0xF0
+008B 75DA08           96     MOV 0xDA, #0x08
+008E 75DB90           97     MOV 0xDB, #0x90
+0091 75C201           98     MOV 0xC2, #0x01
+                      99     ;APBR 0x0104, 0x00000000
+0094 75C101          100     MOV 0xC1, #0x01
+0097 75D800          101     MOV 0xD8, #0x00
+009A 75D900          102     MOV 0xD9, #0x00
+009D 75DA00          103     MOV 0xDA, #0x00
+00A0 75DB00          104     MOV 0xDB, #0x00
+00A3 75C201          105     MOV 0xC2, #0x01
+                     106     ;APBR 0x0108, 0x00000000
+00A6 75C008          107     MOV 0xC0, #0x08
+00A9 75C201          108     MOV 0xC2, #0x01
+                     109     ;APBR 0x010C, 0x00000000
+00AC 75C00C          110     MOV 0xC0, #0x0C
+00AF 75C201          111     MOV 0xC2, #0x01
+                     112     ;APBR 0x0110, 0x00000000
+00B2 75C010          113     MOV 0xC0, #0x10
+00B5 75C201          114     MOV 0xC2, #0x01
+                     115     ;APBR 0x1608, 0x00000000
+00B8 75C008          116     MOV 0xC0, #0x08
+00BB 75C116          117     MOV 0xC1, #0x16
+00BE 75C201          118     MOV 0xC2, #0x01
+                     119     ;APBR 0x160C, 0x00000000
+A51 MACRO ASSEMBLER  TCM300_315MHZ_DEFAULT                                                03/22/2014 14:19:05 PAGE     3
+
+00C1 75C00C          120     MOV 0xC0, #0x0C
+00C4 75C201          121     MOV 0xC2, #0x01
+                     122     ;APBR 0x1908, 0x00000000
+00C7 75C008          123     MOV 0xC0, #0x08
+00CA 75C119          124     MOV 0xC1, #0x19
+00CD 75C201          125     MOV 0xC2, #0x01
+                     126     ;APBR 0x1808, 0x000001E3
+00D0 75C118          127     MOV 0xC1, #0x18
+00D3 75D8E3          128     MOV 0xD8, #0xE3
+00D6 75D901          129     MOV 0xD9, #0x01
+00D9 75C201          130     MOV 0xC2, #0x01
+                     131     ;APBR 0x1804, 0x00000528
+00DC 75C004          132     MOV 0xC0, #0x04
+00DF 75D828          133     MOV 0xD8, #0x28
+00E2 75D905          134     MOV 0xD9, #0x05
+00E5 75C201          135     MOV 0xC2, #0x01
+                     136     ;APBR 0x1604, 0x00010000
+00E8 75C116          137     MOV 0xC1, #0x16
+00EB 75D800          138     MOV 0xD8, #0x00
+00EE 75D900          139     MOV 0xD9, #0x00
+00F1 75DA01          140     MOV 0xDA, #0x01
+00F4 75C201          141     MOV 0xC2, #0x01
+                     142     ;APBR 0x1904, 0x0051B0E0
+00F7 75C119          143     MOV 0xC1, #0x19
+00FA 75D8E0          144     MOV 0xD8, #0xE0
+00FD 75D9B0          145     MOV 0xD9, #0xB0
+0100 75DA51          146     MOV 0xDA, #0x51
+0103 75C201          147     MOV 0xC2, #0x01
+0106                 148     SEND_JLCC_CHAIN:
+                     149     ;APBR 0x1800, 0x00000001
+0106 75C000          150     MOV 0xC0, #0x00
+0109 75C118          151     MOV 0xC1, #0x18
+010C 75D801          152     MOV 0xD8, #0x01
+010F 75D900          153     MOV 0xD9, #0x00
+0112 75DA00          154     MOV 0xDA, #0x00
+0115 75DB00          155     MOV 0xDB, #0x00
+0118 75C201          156     MOV 0xC2, #0x01
+                     157     ;APBR 0x1900, 0x00000001
+011B 75C119          158     MOV 0xC1, #0x19
+011E 75C201          159     MOV 0xC2, #0x01
+                     160     ;APBR 0x1600, 0x00000001
+0121 75C116          161     MOV 0xC1, #0x16
+0124 75C201          162     MOV 0xC2, #0x01
+                     163     ;APBR 0x0100, 0x00000001
+0127 75C101          164     MOV 0xC1, #0x01
+012A 75C201          165     MOV 0xC2, #0x01
+012D 22              166     RET
+                     167     
+                     168     
+012E                 169     SEND_ANALOG0_CHAIN:
+                     170     ;APBR 0x1704, 0x899C9AD8
+012E 75C004          171     MOV 0xC0, #0x04
+0131 75C117          172     MOV 0xC1, #0x17
+0134 75D8D8          173     MOV 0xD8, #0xD8
+0137 75D99A          174     MOV 0xD9, #0x9A
+013A 75DA9C          175     MOV 0xDA, #0x9C
+013D 75DB89          176     MOV 0xDB, #0x89
+0140 75C201          177     MOV 0xC2, #0x01
+                     178     ;APBR 0x1708, 0x00000020
+0143 75C008          179     MOV 0xC0, #0x08
+0146 75D820          180     MOV 0xD8, #0x20
+0149 75D900          181     MOV 0xD9, #0x00
+014C 75DA00          182     MOV 0xDA, #0x00
+014F 75DB00          183     MOV 0xDB, #0x00
+0152 75C201          184     MOV 0xC2, #0x01
+                     185     ;APBR 0x1700, 0x00000001
+A51 MACRO ASSEMBLER  TCM300_315MHZ_DEFAULT                                                03/22/2014 14:19:05 PAGE     4
+
+0155 75C000          186     MOV 0xC0, #0x00
+0158 75D801          187     MOV 0xD8, #0x01
+015B 75C201          188     MOV 0xC2, #0x01
+015E 22              189     RET
+                     190     
+                     191     END
+A51 MACRO ASSEMBLER  TCM300_315MHZ_DEFAULT                                                03/22/2014 14:19:05 PAGE     5
+
+SYMBOL TABLE LISTING
+------ ----- -------
+
+
+N A M E                             T Y P E  V A L U E   ATTRIBUTES
+
+?CO?RADIO_INIT . . . . . . . . . .  C SEG    000EH       REL=UNIT
+?PR?_RADIO_INIT_ASM?RADIO_INIT_ASM  C SEG    015FH       REL=UNIT
+ONLY_SEND_JLCC . . . . . . . . . .  C ADDR   0019H   R   SEG=?PR?_RADIO_INIT_ASM?RADIO_INIT_ASM
+RADIO_INIT . . . . . . . . . . . .  C ADDR   0017H   R   SEG=?PR?_RADIO_INIT_ASM?RADIO_INIT_ASM
+RADIO_INIT_CHAINS. . . . . . . . .  C ADDR   001CH   R   SEG=?PR?_RADIO_INIT_ASM?RADIO_INIT_ASM
+SEND_ANALOG0_CHAIN . . . . . . . .  C ADDR   012EH   R   SEG=?PR?_RADIO_INIT_ASM?RADIO_INIT_ASM
+SEND_JLCC_CHAIN. . . . . . . . . .  C ADDR   0106H   R   SEG=?PR?_RADIO_INIT_ASM?RADIO_INIT_ASM
+TABLE. . . . . . . . . . . . . . .  C ADDR   0000H   R   SEG=?CO?RADIO_INIT
+U8RSSICALIB. . . . . . . . . . . .  C ADDR   0000H   R   SEG=?PR?_RADIO_INIT_ASM?RADIO_INIT_ASM
+_RADIO_INIT_ASM. . . . . . . . . .  C ADDR   0010H   R   SEG=?PR?_RADIO_INIT_ASM?RADIO_INIT_ASM
+
+
+REGISTER BANK(S) USED: 0 
+
+
+ASSEMBLY COMPLETE.  0 WARNING(S), 0 ERROR(S)

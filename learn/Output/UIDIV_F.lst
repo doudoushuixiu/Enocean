@@ -1,0 +1,205 @@
+A51 MACRO ASSEMBLER  UIDIV_F                                                              03/28/2014 16:48:51 PAGE     1
+
+
+MACRO ASSEMBLER A51 V8.01
+OBJECT MODULE PLACED IN .\Output\UIDIV_F.obj
+ASSEMBLER INVOKED BY: C:\Keil\C51\BIN\A51.EXE UIDIV_F.A51 SET(LARGE) DEBUG PRINT(.\Output\UIDIV_F.lst) OBJECT(.\Output\U
+                      IDIV_F.obj) EP
+
+LOC  OBJ            LINE     SOURCE
+
+                       1     ;
+                       2     ; Unsigned Integer Division & Modulo for classic 8051
+                       3     ;
+                       4     ;    R6|R7 = R6|R7 / R4|R5;
+                       5     ;    R4|R5 = R6|R7 % R4|R5;
+                       6     ;
+                       7     
+                       8                     NAME    ?C?UIDIV
+                       9     ?C?LIB_CODE     SEGMENT         CODE
+                      10     
+----                  11                     RSEG    ?C?LIB_CODE
+                      12     
+                      13                     PUBLIC  ?C?UIDIV
+                      14     
+0000 BC000B           15     ?C?UIDIV:       CJNE    R4,#0,DIV16BIT
+0003 BE0029           16                     CJNE    R6,#0,DIV8BIT
+0006 EF               17                     MOV     A,R7
+0007 8DF0             18                     MOV     B,R5
+0009 84               19                     DIV     AB
+000A FF               20                     MOV     R7,A
+000B ADF0             21                     MOV     R5,B
+000D 22               22                     RET
+                      23     
+000E E4               24     DIV16BIT:       CLR     A               ; clear modulo value 
+000F CC               25                     XCH     A,R4
+0010 F8               26                     MOV     R0,A
+0011 75F008           27                     MOV     B,#8            ; number of bits 
+0014 EF               28     DIV16LOOP:      MOV     A,R7            ; shift operation
+0015 2F               29                     ADD     A,R7
+0016 FF               30                     MOV     R7,A
+0017 EE               31                     MOV     A,R6
+0018 33               32                     RLC     A
+0019 FE               33                     MOV     R6,A
+001A EC               34                     MOV     A,R4
+001B 33               35                     RLC     A
+001C FC               36                     MOV     R4,A
+                      37     ; test if remainder > divisor
+001D EE               38                     MOV     A,R6
+001E 9D               39                     SUBB    A,R5
+001F EC               40                     MOV     A,R4
+0020 98               41                     SUBB    A,R0
+0021 4005             42                     JC      NO16DIV
+                      43     ; subtract
+0023 FC               44                     MOV     R4,A
+0024 EE               45                     MOV     A,R6
+0025 9D               46                     SUBB    A,R5
+0026 FE               47                     MOV     R6,A
+0027 0F               48                     INC     R7              ; Increment Result
+                      49     
+0028 D5F0E9           50     NO16DIV:        DJNZ    B,DIV16LOOP
+002B E4               51                     CLR     A
+002C CE               52                     XCH     A,R6
+002D FD               53                     MOV     R5,A
+002E 22               54                     RET
+                      55     
+                      56     
+002F ED               57     DIV8BIT:        MOV     A,R5
+A51 MACRO ASSEMBLER  UIDIV_F                                                              03/28/2014 16:48:51 PAGE     2
+
+0030 F8               58                     MOV     R0,A
+0031 F5F0             59                     MOV     B,A
+0033 EE               60                     MOV     A,R6
+0034 B41000           61                     CJNE    A,#16,$+3
+0037 4021             62                     JC      DIV8_12
+0039 84               63                     DIV     AB
+003A 20D21C           64                     JB      OV,RETURN
+003D FE               65                     MOV     R6,A
+003E ADF0             66                     MOV     R5,B
+0040 75F008           67                     MOV     B,#8            ; number of bits 
+0043 EF               68     DIV8LOOP:       MOV     A,R7            ; Shift operation
+0044 2F               69                     ADD     A,R7
+0045 FF               70                     MOV     R7,A
+0046 ED               71                     MOV     A,R5
+0047 33               72                     RLC     A
+0048 FD               73                     MOV     R5,A
+0049 4007             74                     JC      DO8SUB
+004B 98               75                     SUBB    A,R0
+004C 5006             76                     JNC     DO8SUB2
+004E D5F0F2           77                     DJNZ    B,DIV8LOOP
+0051 22               78                     RET
+                      79     
+0052 C3               80     DO8SUB:         CLR     C
+0053 98               81                     SUBB    A,R0
+0054 FD               82     DO8SUB2:        MOV     R5,A
+0055 0F               83                     INC     R7
+0056 D5F0EA           84                     DJNZ    B,DIV8LOOP
+0059 22               85     RETURN:         RET
+                      86     
+                      87     
+005A EF               88     DIV8_12:        MOV     A,R7                 ; Division of bit 4..11 / bit 0..7
+005B C4               89                     SWAP    A
+005C FF               90                     MOV     R7,A
+005D 540F             91                     ANL     A,#0FH
+005F CE               92                     XCH     A,R6
+0060 C4               93                     SWAP    A
+0061 4E               94                     ORL     A,R6
+0062 84               95                     DIV     AB
+0063 20D2F3           96                     JB      OV,RETURN
+0066 FE               97                     MOV     R6,A
+0067 ADF0             98                     MOV     R5,B
+                      99     
+0069 EF              100                     MOV     A,R7
+006A 54F0            101                     ANL     A,#0F0H
+006C 25E0            102                     ADD     A,ACC
+006E FF              103                     MOV     R7,A
+006F ED              104                     MOV     A,R5
+0070 33              105                     RLC     A
+0071 FD              106                     MOV     R5,A
+0072 4005            107                     JC      aDO8SUB
+0074 98              108                     SUBB    A,R0
+0075 5004            109                     JNC     aDO8SUB2
+0077 4004            110                     JC      aDO8SUB3
+0079 C3              111     aDO8SUB:        CLR     C
+007A 98              112                     SUBB    A,R0
+007B FD              113     aDO8SUB2:       MOV     R5,A
+007C 0F              114                     INC     R7
+007D                 115     aDO8SUB3:
+                     116     ;
+                     117                     REPT    3
+                     118     LOCAL   bDO8SUB, bDO8SUB2, bDO8SUB3
+                     119                     MOV     A,R7            ; Shift Operation
+                     120                     ADD     A,R7
+                     121                     MOV     R7,A
+                     122                     MOV     A,R5
+                     123                     RLC     A
+A51 MACRO ASSEMBLER  UIDIV_F                                                              03/28/2014 16:48:51 PAGE     3
+
+                     124                     MOV     R5,A
+                     125                     JC      bDO8SUB
+                     126                     SUBB    A,R0
+                     127                     JNC     bDO8SUB2
+                     128                     JC      bDO8SUB3
+                     129     
+                     130     bDO8SUB:        CLR     C
+                     131                     SUBB    A,R0
+                     132     bDO8SUB2:       MOV     R5,A
+                     133                     INC     R7
+                     134     bDO8SUB3:
+                     135     
+                     136                     ENDM
+                     188     
+00B0 EE              189                     MOV     A,R6
+00B1 C4              190                     SWAP    A
+00B2 540F            191                     ANL     A,#00FH
+00B4 CE              192                     XCH     A,R6
+00B5 C4              193                     SWAP    A
+00B6 54F0            194                     ANL     A,#0F0H
+00B8 CF              195                     XCH     A,R7
+00B9 540F            196                     ANL     A,#00FH
+00BB 4F              197                     ORL     A,R7
+00BC FF              198                     MOV     R7,A
+                     199     
+00BD 22              200                     RET
+                     201     
+                     202                     END
+A51 MACRO ASSEMBLER  UIDIV_F                                                              03/28/2014 16:48:51 PAGE     4
+
+SYMBOL TABLE LISTING
+------ ----- -------
+
+
+N A M E             T Y P E  V A L U E   ATTRIBUTES
+
+??0000 . . . . . .  C ADDR   008AH   R   SEG=?C?LIB_CODE
+??0001 . . . . . .  C ADDR   008CH   R   SEG=?C?LIB_CODE
+??0002 . . . . . .  C ADDR   008EH   R   SEG=?C?LIB_CODE
+??0003 . . . . . .  C ADDR   009BH   R   SEG=?C?LIB_CODE
+??0004 . . . . . .  C ADDR   009DH   R   SEG=?C?LIB_CODE
+??0005 . . . . . .  C ADDR   009FH   R   SEG=?C?LIB_CODE
+??0006 . . . . . .  C ADDR   00ACH   R   SEG=?C?LIB_CODE
+??0007 . . . . . .  C ADDR   00AEH   R   SEG=?C?LIB_CODE
+??0008 . . . . . .  C ADDR   00B0H   R   SEG=?C?LIB_CODE
+?C?LIB_CODE. . . .  C SEG    00BEH       REL=UNIT
+?C?UIDIV . . . . .  C ADDR   0000H   R   SEG=?C?LIB_CODE
+ACC. . . . . . . .  D ADDR   00E0H   A   
+ADO8SUB. . . . . .  C ADDR   0079H   R   SEG=?C?LIB_CODE
+ADO8SUB2 . . . . .  C ADDR   007BH   R   SEG=?C?LIB_CODE
+ADO8SUB3 . . . . .  C ADDR   007DH   R   SEG=?C?LIB_CODE
+B. . . . . . . . .  D ADDR   00F0H   A   
+DIV16BIT . . . . .  C ADDR   000EH   R   SEG=?C?LIB_CODE
+DIV16LOOP. . . . .  C ADDR   0014H   R   SEG=?C?LIB_CODE
+DIV8BIT. . . . . .  C ADDR   002FH   R   SEG=?C?LIB_CODE
+DIV8LOOP . . . . .  C ADDR   0043H   R   SEG=?C?LIB_CODE
+DIV8_12. . . . . .  C ADDR   005AH   R   SEG=?C?LIB_CODE
+DO8SUB . . . . . .  C ADDR   0052H   R   SEG=?C?LIB_CODE
+DO8SUB2. . . . . .  C ADDR   0054H   R   SEG=?C?LIB_CODE
+NO16DIV. . . . . .  C ADDR   0028H   R   SEG=?C?LIB_CODE
+OV . . . . . . . .  B ADDR   00D0H.2 A   
+RETURN . . . . . .  C ADDR   0059H   R   SEG=?C?LIB_CODE
+
+
+REGISTER BANK(S) USED: 0 
+
+
+ASSEMBLY COMPLETE.  0 WARNING(S), 0 ERROR(S)

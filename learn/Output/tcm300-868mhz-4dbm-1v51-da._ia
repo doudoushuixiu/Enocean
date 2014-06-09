@@ -1,0 +1,1 @@
+"..\..\EO3000I_LIB\RadioCFG\tcm300-868mhz-4dbm-1v51-da.a51" SET (LARGE) DEBUG PRINT(.\Output\tcm300-868mhz-4dbm-1v51-da.lst) OBJECT(.\Output\tcm300-868mhz-4dbm-1v51-da.obj) EP

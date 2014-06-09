@@ -1,0 +1,48 @@
+<html>
+<body>
+<pre>
+<h1>µVision Build Log</h1>
+<h2>Project:</h2>
+C:\Program Files (x86)\EnOcean\DolphinAPI\DolphinAPI\EO3000I_API\Examples\RadioToSerial\RadioToSerial.uvproj
+Project File Date:  03/21/2014
+
+<h2>Output:</h2>
+Build target 'Simulator_315'
+compiling main.c...
+assembling STARTUP.A51...
+compiling EO3000I_CFG.c...
+assembling tcm300-315mhz-default.a51...
+linking...
+Program Size: data=163.2 xdata=534 code=10665
+creating hex file from ".\Output\RadioToSerial_315"...
+User command #1: eopx.exe -fprg "C:\Program Files (x86)\EnOcean\DolphinAPI\DolphinAPI\EO3000I_API\Examples\RadioToSerial\Output\RadioToSerial_315.HEX" -fcfg "C:\Program Files (x86)\EnOcean\DolphinAPI\DolphinAPI\EO3000I_API\Examples\RadioToSerial\Output\RadioToSerial_315_cfg.hex" -script "C:\Program Files (x86)\EnOcean\DolphinAPI\DolphinAPI\EO3000I_API\Examples\RadioToSerial\postbuild.txt"
+EOP-EnOcean Programmer v2.3.4.0 (c) Copyright 2009 EnOcean GmbH
+-----------------------------------------------------------------
+load: C:\Program Files (x86)\EnOcean\DolphinAPI\DolphinAPI\EO3000I_API\Examples\RadioToSerial\Output\RadioToSerial_315.HEX
+SetBist:
+  PrgSize         : 10412 bytes
+  PrgSize aligned : 10496 bytes
+  BIST address    : 0x28FF
+  BIST CRC        : 0x70
+SetVersion:
+  API version     : 2.5.0.0
+  App version     : 1.0.4.0
+  App description : RADIOTOSERIAL
+  Radio frequency : 315Mhz
+  Radio revision  : 1.39
+save: C:\Program Files (x86)\EnOcean\DolphinAPI\DolphinAPI\EO3000I_API\Examples\RadioToSerial\Output\RadioToSerial_315.HEX
+save: C:\Program Files (x86)\EnOcean\DolphinAPI\DolphinAPI\EO3000I_API\Examples\RadioToSerial\Output\RadioToSerial_315_cfg.hex
+".\Output\RadioToSerial_315" - 0 Error(s), 0 Warning(s).
+"eopx.exe" -fprg "C:\Program Files (x86)\EnOcean\DolphinAPI\DolphinAPI\EO3000I_API\Examples\RadioToSerial\Output\RadioToSerial_315.HEX" -fcfg "C:\Program Files (x86)\EnOcean\DolphinAPI\DolphinAPI\EO3000I_API\Examples\RadioToSerial\Output\RadioToSerial_315_cfg.hex" -write
+EOP-EnOcean Programmer v2.3.4.0 (c) Copyright 2009 EnOcean GmbH
+-----------------------------------------------------------------
+Init device 'EOU9EVA3A'........................................OK
+Programmer firmware version '3.2'..............................OK
+Connected to 'EO3000I' BootLoader 'v2.3.0.0'...................OK
+Read CfgArea to buffer.........................................OK
+Read chip information..........................................OK
+Backup for ChipID: 0x80BD1E already exists.....................OK
+Check radio conformity.....................................FAILED
+ERROR: Can't download firmware with 315Mhz radio settings to 868.3Mhz module!
+Reset chip.....................................................OK
+Disconnect.....................................................OK

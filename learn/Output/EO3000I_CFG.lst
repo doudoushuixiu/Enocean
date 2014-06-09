@@ -1,0 +1,128 @@
+C51 COMPILER V9.00   EO3000I_CFG                                                           06/05/2014 10:05:02 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE EO3000I_CFG
+OBJECT MODULE PLACED IN .\Output\EO3000I_CFG.obj
+COMPILER INVOKED BY: C:\Keil\C51\BIN\C51.EXE EO3000I_CFG.c LARGE OPTIMIZE(9,SPEED) BROWSE DEFINE(RELEASE) DEBUG OBJECTEX
+                    -TEND PRINT(.\Output\EO3000I_CFG.lst) OBJECT(.\Output\EO3000I_CFG.obj)
+
+line level    source
+
+   1          //Generated on 28.05.2014 09:09 by DolphinStudio 2.3.0.0
+   2          #include "EO3000I_CFG.h"
+   3          
+   4          
+   5          //*********************API INIT*************************** 
+   6          
+   7          //Note: Function is called from startup.a51. Global variables are not yet initialized!
+   8          void startupInit()
+   9          {
+  10   1              pwr_enableXTAL(DEFAULT_DELAY);
+  11   1              io_init(io_param);
+  12   1      }
+  13          
+  14          
+  15          //Note: Function is called from main()
+  16          void mainInit()
+  17          {
+  18   1              radio_init_asm(CFG_ALL);
+  19   1              radio_init(RADIO_BUFF_NUM, RADIO_MATURITY_TIME);
+  20   1              radio_initDutyCycleLimit(NUM_OF_DUTY_CYCLE_SLOTS);
+  21   1              isr_timer0Init();
+  22   1              misc_init();
+  23   1              pwr_selectXTAL();
+  24   1      }
+  25          
+  26          //*********************RADIO PARAM***************************
+  27          
+  28          //! Radio buffers allocation    
+  29           volatile uint8 xdata u8gRadioBuff[RADIO_BUFF_NUM][RADIO_BUFF_LENGTH];  
+  30           //! Radio tx buffers additional allocation for state           
+  31           volatile uint8 xdata u8gRadioBuffTXState[RADIO_BUFF_NUM];              
+  32           //! Radio flags                
+  33           volatile uint8 idata u8gFlags[RADIO_BUFF_NUM]; 
+  34           //! buffers Rx subtelegrams counters. Index indicates the buffer number.       
+  35           volatile uint8 idata u8gRadioBuffsRxSubtel[RADIO_BUFF_NUM];            
+  36           //! buffers Tx subtelegrams counters. Index indicates the buffer number.               
+  37           volatile uint8 idata u8gRadioBuffsTxSubtel[RADIO_BUFF_NUM];    
+  38           //! buffers time stamp counters. Index indicates the buffer number.    
+  39           volatile uint8 idata u8gRadioBuffsTimeStamp[RADIO_BUFF_NUM];   
+  40           //! buffers received bytes counters. Index indicates the buffer number.                
+  41           volatile uint8 idata u8gRadioBuffsBytes[RADIO_BUFF_NUM];       
+  42           //! buffers dBm values. Value indicating signal strength upon telegram reception. 
+  43           volatile uint8 xdata u8gRxRadioBuffsDbm[RADIO_BUFF_NUM];       
+  44           //! Tx buffers time to send subtelegram. Index indicates the buffer number. 
+  45           volatile uint8 idata u8gTxRadioBuffsTimeToSend[RADIO_BUFF_NUM];
+  46          
+  47          //*********************DUTY CYCLE PARAM***************************
+  48          //! Duty cycle buffer counter allocation and initialization     
+  49          volatile uint8 xdata u8gDutyTimeSlots[NUM_OF_DUTY_CYCLE_SLOTS]=0;       
+  50          
+  51          
+  52          //*********************FILTER PARAM***************************
+  53          
+  54          //! Filter buffer allocation for value of filter
+C51 COMPILER V9.00   EO3000I_CFG                                                           06/05/2014 10:05:02 PAGE 2   
+
+  55          volatile uint32 xdata u32gFilterValue[FILTER_NUM];
+  56          //! Filter buffer allocation containing FILTER_TYPE (Bit 0..1 and FILTER_KIND Bit 7)
+  57          volatile uint8  xdata u8gFilterCfg[FILTER_NUM];
+  58          
+  59          uint8 filter_param[]    = {
+  60                          FILTER_NUM, //IDX_FILTER_MAX
+  61                          FILTER_ALL_AND  //IDX_FILTER_OPERATOR 
+  62           };
+  63          
+  64          //*********************IO PARAM***************************
+  65          
+  66          uint8 code      io_param[]      = {     
+  67                          0x07,   //IDX_GPIO_CONF 
+  68                          0x00,   //IDX_GPIO0_CONF 
+  69                          0x0C,   //IDX_GPIO0_PULL_CONF 
+  70                          0x03,   //IDX_GPIO0_DIR 
+  71                          0x00,   //IDX_GPIO1_AN 
+  72                          0x00,   //IDX_GPIO1_CONF 
+  73                          0x03,   //IDX_GPIO1_DIG_CONF 
+  74                          0x00,   //IDX_GPIO1_DIR 
+  75                          0xFF,   //IDX_GPIO1_PULL 
+  76                          0x04,   //IDX_GPIO2_CONF 
+  77                          0x00,   //IDX_GPIO2_DIR 
+  78                          0x00,   //IDX_GPIO0 
+  79                          0x00,   //IDX_GPIO1 
+  80                          0x00    //IDX_GPIO2 
+  81           };
+  82          
+  83          // I/O Configuration overview
+  84          // 
+  85          //      Pin:  Interface     Direction  Pull   Init Value
+  86          // SCSEDIO0:  Digital I/O   Out        None   0
+  87          // SCLKDIO1:  Digital I/O   Out        None   0
+  88          // WSDADIO2:  Digital I/O   In         Up     0
+  89          // RSDADIO3:  Digital I/O   In         Up     0
+  90          //    ADIO0:  Digital I/O   In         Up     0
+  91          //    ADIO1:  Digital I/O   In         Up     0
+  92          //    ADIO2:  Digital I/O   In         Up     0
+  93          //    ADIO3:  Digital I/O   In         Up     0
+  94          //    ADIO4:  Digital I/O   In         Up     0
+  95          //    ADIO5:  Digital I/O   In         Up     0
+  96          //    ADIO6:  Digital I/O   In         Up     0
+  97          //    ADIO7:  Digital I/O   In         Up     0
+  98          //   WXIDIO:  Digital I/O   In         Up     0
+  99          //   WXODIO:  Digital I/O   In         Up     
+ 100          //    WAKE0:  Digital I/O   In         None   
+ 101          //    WAKE1:  Digital I/O   In         None   
+ 102          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     40    ----
+   CONSTANT SIZE    =     14    ----
+   XDATA SIZE       =    248    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =     60    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

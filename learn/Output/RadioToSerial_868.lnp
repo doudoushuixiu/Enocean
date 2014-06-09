@@ -1,0 +1,11 @@
+".\Output\main.obj",
+".\Output\STARTUP.obj",
+".\Output\EO3000I_CFG.obj",
+".\Output\tcm320-868mhz-4dbm-1v51-da.obj",
+".\EO3000I_API.LIB",
+".\EO3000I_API_FSK.LIB" 
+TO ".\Output\RadioToSerial_868" 
+PRINT(".\Output\RadioToSerial_868.m51") RAMSIZE(256) 
+DISABLEWARNING (15,16) 
+CODE( 0X0000-0X7FFF )
+XDATA( 0X0000-0X07FF )

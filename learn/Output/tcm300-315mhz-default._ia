@@ -1,0 +1,1 @@
+"..\..\EO3000I_LIB\RadioCFG\tcm300-315mhz-default.a51" SET (LARGE) DEBUG PRINT(.\Output\tcm300-315mhz-default.lst) OBJECT(.\Output\tcm300-315mhz-default.obj) EP
